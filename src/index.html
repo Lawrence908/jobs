@@ -1,0 +1,898 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A Century of Work: US &amp; Canada Jobs History</title>
+<meta name="description" content="US and Canadian unemployment and jobs history on one timeline: monthly series back to 1948 and 1976, annual estimates to 1929 and 1921, recession bands, and the Sahm rule.">
+<link rel="stylesheet" href="/shared-footer/footer.css">
+<style>
+:root {
+  color-scheme: light;
+  --surface-1: #fcfcfb;
+  --plane: #f9f9f7;
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --muted: #898781;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --border: rgba(11,11,11,0.10);
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --series-4: #4a3aa7;
+  --tooltip-bg: rgba(252,252,251,0.97);
+  --warn: #b3541e;
+  --band-alpha: 0.09;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --surface-1: #1a1a19;
+    --plane: #0d0d0d;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --muted: #898781;
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --border: rgba(255,255,255,0.10);
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #9085e9;
+    --tooltip-bg: rgba(26,26,25,0.97);
+    --warn: #e08a4f;
+    --band-alpha: 0.13;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface-1: #1a1a19;
+  --plane: #0d0d0d;
+  --text-primary: #ffffff;
+  --text-secondary: #c3c2b7;
+  --muted: #898781;
+  --grid: #2c2c2a;
+  --axis: #383835;
+  --border: rgba(255,255,255,0.10);
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #9085e9;
+  --tooltip-bg: rgba(26,26,25,0.97);
+  --warn: #e08a4f;
+  --band-alpha: 0.13;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--plane);
+  color: var(--text-primary);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 1080px; margin: 0 auto; padding: 32px 20px 8px; }
+
+header h1 { font-size: 1.9rem; line-height: 1.2; margin: 0 0 6px; letter-spacing: -0.02em; }
+header p.sub { margin: 0; color: var(--text-secondary); max-width: 66ch; }
+.stamp { margin-top: 10px; font-size: 0.82rem; color: var(--muted); }
+
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin: 24px 0 8px; }
+.tile { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+.tile .label { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); display: flex; align-items: center; gap: 7px; }
+.swatch { width: 10px; height: 10px; border-radius: 2px; flex: none; }
+.tile .value { font-size: 1.85rem; font-weight: 650; letter-spacing: -0.02em; margin-top: 4px; font-variant-numeric: tabular-nums; }
+.tile .note { font-size: 0.8rem; color: var(--text-secondary); }
+
+.card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 18px 18px 14px; margin: 16px 0; }
+.card h2 { font-size: 1.05rem; margin: 0 0 2px; letter-spacing: -0.01em; }
+.card p.cap { margin: 0 0 12px; font-size: 0.85rem; color: var(--text-secondary); max-width: 90ch; }
+
+.controls { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin-bottom: 12px; }
+.group { display: flex; gap: 4px; flex-wrap: wrap; }
+.group .glabel { font-size: 0.78rem; color: var(--muted); align-self: center; margin-right: 4px; }
+button.seg {
+  font: inherit; font-size: 0.82rem; padding: 5px 11px; cursor: pointer;
+  background: transparent; color: var(--text-secondary);
+  border: 1px solid var(--border); border-radius: 999px;
+}
+button.seg:hover { background: var(--grid); }
+button.seg[aria-pressed="true"] { background: var(--text-primary); color: var(--surface-1); border-color: var(--text-primary); }
+
+.legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 0 0 8px; font-size: 0.85rem; color: var(--text-secondary); }
+.legend span.item { display: flex; align-items: center; gap: 7px; }
+.legend .swatch { width: 14px; height: 3px; border-radius: 2px; }
+.legend .swatch.dashed { background: none !important; border-top: 3px dashed; width: 14px; height: 0; border-radius: 0; }
+.legend .swatch.band { width: 14px; height: 10px; border: 1px solid var(--border); }
+
+.plot { position: relative; width: 100%; }
+canvas { display: block; width: 100%; touch-action: pan-y; }
+.tooltip {
+  position: absolute; pointer-events: none; opacity: 0; transition: opacity .08s;
+  background: var(--tooltip-bg); border: 1px solid var(--border); border-radius: 8px;
+  padding: 8px 10px; font-size: 0.8rem; line-height: 1.45; white-space: nowrap;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.14); z-index: 5; color: var(--text-primary);
+}
+.tooltip .tdate { color: var(--muted); font-size: 0.74rem; margin-bottom: 3px; }
+.tooltip .trow { display: flex; align-items: center; gap: 7px; }
+.tooltip .tval { font-variant-numeric: tabular-nums; margin-left: auto; padding-left: 14px; font-weight: 600; }
+
+.duo { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 720px) { .duo { grid-template-columns: 1fr; } }
+.duo h3 { font-size: 0.9rem; margin: 0 0 8px; color: var(--text-secondary); font-weight: 600; }
+
+.status { color: var(--text-secondary); font-size: 0.9rem; padding: 40px 0; text-align: center; }
+
+table { border-collapse: collapse; width: 100%; font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+th, td { text-align: right; padding: 5px 8px; border-bottom: 1px solid var(--grid); }
+th:first-child, td:first-child { text-align: left; }
+th { color: var(--muted); font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; }
+td sup { color: var(--muted); }
+.tablewrap { overflow-x: auto; max-height: 420px; overflow-y: auto; }
+
+.prose { font-size: 0.92rem; color: var(--text-secondary); }
+.prose h3 { font-size: 0.95rem; color: var(--text-primary); margin: 18px 0 6px; }
+.prose ul { padding-left: 20px; margin: 6px 0; }
+.prose li { margin-bottom: 7px; }
+.prose a { color: var(--series-1); }
+.prose code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.88em; background: var(--plane); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; }
+
+/* A figure the data could not supply renders as a visible gap, never as a
+   silently vanished number. */
+[data-tok] { font-variant-numeric: tabular-nums; }
+.tok-missing { color: var(--warn); border-bottom: 1px dashed var(--warn); }
+
+/* The hub footer is styled by /shared-footer/footer.css, linked above and
+   served by Caddy's shared_footer snippet. Deliberately not restyled here. */
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>A Century of Work</h1>
+    <p class="sub">Unemployment and jobs in the United States and Canada on one timeline: monthly official series back to 1948 and 1976, annual estimates back to 1929 and 1921, every recession shaded. Every figure carries the date it was true and the place it came from.</p>
+    <p class="stamp" id="stamp">Loading data…</p>
+  </header>
+
+  <div class="tiles" id="tiles"></div>
+
+  <section class="card">
+    <h2>Unemployment, 1921 to today</h2>
+    <p class="cap">Percent of the labour force, both countries. Solid lines are the modern monthly surveys; dashed segments are annual historical estimates, drawn as what they are rather than spliced silently. Shaded bands are recessions, each country in its own tint. The June <span data-tok="ca_peak_year">1933</span> Canadian peak of <span data-tok="ca_peak">…</span> and the US <span data-tok="us_peak_year">1933</span> annual average of <span data-tok="us_peak">…</span> are the century's high-water marks.</p>
+    <div class="controls">
+      <div class="group" role="group" aria-label="Time range">
+        <span class="glabel">Range</span>
+        <button class="seg" data-range="max" aria-pressed="true">Max</button>
+        <button class="seg" data-range="50">50y</button>
+        <button class="seg" data-range="25">25y</button>
+        <button class="seg" data-range="10">10y</button>
+        <button class="seg" data-range="5">5y</button>
+      </div>
+      <div class="group" role="group" aria-label="Recession bands">
+        <span class="glabel">Recessions</span>
+        <button class="seg" data-band="us" aria-pressed="true">US</button>
+        <button class="seg" data-band="ca" aria-pressed="true">Canada</button>
+      </div>
+    </div>
+    <div class="legend" id="legend-main"></div>
+    <div class="plot"><canvas id="c-main" height="400"></canvas><div class="tooltip" id="t-main"></div></div>
+    <p class="status" id="status">Fetching a century of labour data…</p>
+  </section>
+
+  <section class="card">
+    <h2>The Sahm rule: the recession trigger</h2>
+    <p class="cap">Percentage points. The three-month average unemployment rate minus its low over the prior year. Readings at or above <span data-tok="sahm_threshold">0.50</span> have marked the start of every US recession since 1970. The US line is Sahm's real-time series; the Canadian line borrows the arithmetic on revised data, an analogue rather than the validated rule. Currently: US <span data-tok="sahm_us_latest">…</span>, Canada <span data-tok="sahm_ca_latest">…</span>.</p>
+    <div class="legend" id="legend-sahm"></div>
+    <div class="plot"><canvas id="c-sahm" height="300"></canvas><div class="tooltip" id="t-sahm"></div></div>
+  </section>
+
+  <section class="card">
+    <h2>Jobs growth, year over year</h2>
+    <p class="cap">Percent change from a year earlier. The two measures are deliberately different animals: US payrolls count <em>jobs</em> from an employer survey, Canadian employment counts <em>people</em> from a household survey. Growth below zero outside a shaded band has been rare for a reason.</p>
+    <div class="legend" id="legend-growth"></div>
+    <div class="plot"><canvas id="c-growth" height="300"></canvas><div class="tooltip" id="t-growth"></div></div>
+  </section>
+
+  <section class="card">
+    <h2>Claims: the weekly canary</h2>
+    <p class="cap">People filing for or drawing unemployment insurance, United States, weekly since 1967. Initial claims turn first in nearly every downturn; continued claims confirm. The 2020 spike is real: <span data-tok="icsa_peak">…</span> initial claims in one week, against a 1967-2019 record of <span data-tok="icsa_prev_peak">…</span>.</p>
+    <div class="controls">
+      <div class="group" role="group" aria-label="Scale">
+        <span class="glabel">Scale</span>
+        <button class="seg" data-scale="lin" aria-pressed="true">Linear</button>
+        <button class="seg" data-scale="log" aria-pressed="false">Log</button>
+      </div>
+    </div>
+    <div class="legend" id="legend-claims"></div>
+    <div class="plot"><canvas id="c-claims" height="300"></canvas><div class="tooltip" id="t-claims"></div></div>
+    <p class="cap" style="margin-top:14px">Canada's counterpart, monthly EI regular-benefit recipients, reaches back only to 1997; twenty-nine years against the US pair's sixty, stated rather than hidden.</p>
+    <div class="plot"><canvas id="c-ei" height="220"></canvas><div class="tooltip" id="t-ei"></div></div>
+  </section>
+
+  <section class="card">
+    <h2>Participation: who is in the pool</h2>
+    <p class="cap">Labour force as a share of the working-age population. Unemployment rates only mean anything against this denominator: a rate can fall because people found work or because they stopped looking.</p>
+    <div class="legend" id="legend-part"></div>
+    <div class="plot"><canvas id="c-part" height="300"></canvas><div class="tooltip" id="t-part"></div></div>
+  </section>
+
+  <section class="card">
+    <h2>Openings and quits: the churn</h2>
+    <p class="cap">JOLTS begins in December 2000, so this is short history beside the rest of the page. Workers quit when they are confident they can do better; the quits rate rolls over before recessions bite.</p>
+    <div class="duo">
+      <div>
+        <h3><span class="swatch" style="background:var(--series-1);display:inline-block;vertical-align:baseline"></span> US job openings, millions</h3>
+        <div class="plot"><canvas id="c-open" height="220"></canvas><div class="tooltip" id="t-open"></div></div>
+      </div>
+      <div>
+        <h3><span class="swatch" style="background:var(--series-4);display:inline-block;vertical-align:baseline"></span> US quits rate, percent</h3>
+        <div class="plot"><canvas id="c-quits" height="220"></canvas><div class="tooltip" id="t-quits"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Annual averages</h2>
+    <p class="cap">Unemployment rate by calendar year, the same numbers the headline chart draws. Monthly years are averaged here; flagged years come from the historical estimates.</p>
+    <div class="tablewrap"><table id="tbl">
+      <thead><tr><th>Year</th><th>US %</th><th>Canada %</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+    <p class="cap" style="margin-top:8px"><sup>e</sup> historical estimate · <sup>J</sup> June reading, not an annual average · <sup>14+</sup> original Labour Force Survey basis, persons 14 and over</p>
+  </section>
+
+  <section class="card">
+    <h2>Revisions to published history</h2>
+    <p class="cap" id="rev-cap">Checking…</p>
+    <div class="tablewrap" id="rev-wrap" style="display:none"><table id="rev-tbl">
+      <thead><tr><th>Observed</th><th>Series</th><th>Values changed</th><th>Span</th><th>Largest change</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+    <p class="prose" style="margin:10px 0 0">Labour statistics are living documents: seasonal factors are refit annually, payrolls are benchmarked to tax records once a year, and survey months are restated for weeks afterward. Every refresh here is diffed against the one before it, and any change to an already-published observation is logged. New observations appearing for the first time are not revisions and are not listed.</p>
+  </section>
+
+  <section class="card">
+    <h2>Sources and methods</h2>
+    <div class="prose" style="margin-top:6px">
+      <h3>The modern series</h3>
+      <ul>
+        <li><strong>United States: Bureau of Labor Statistics, via FRED.</strong> Unemployment rate <a href="https://fred.stlouisfed.org/series/UNRATE">UNRATE</a> (monthly since 1948), nonfarm payrolls <a href="https://fred.stlouisfed.org/series/PAYEMS">PAYEMS</a> (1939), participation <a href="https://fred.stlouisfed.org/series/CIVPART">CIVPART</a> (1948), initial claims <a href="https://fred.stlouisfed.org/series/ICSA">ICSA</a> and continued claims <a href="https://fred.stlouisfed.org/series/CCSA">CCSA</a> (weekly, 1967), the Sahm rule <a href="https://fred.stlouisfed.org/series/SAHMREALTIME">SAHMREALTIME</a> (1959), JOLTS openings <a href="https://fred.stlouisfed.org/series/JTSJOL">JTSJOL</a> and quits <a href="https://fred.stlouisfed.org/series/JTSQUR">JTSQUR</a> (December 2000). All seasonally adjusted. Fetched from the keyless CSV endpoint first, the keyed API as fallback.</li>
+        <li><strong>Canada: Statistics Canada Labour Force Survey</strong>, table <a href="https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=1410028701">14-10-0287-01</a>, vectors v2062815 (unemployment rate), v2062811 (employment), v2062816 (participation), 15 and over, seasonally adjusted, monthly since January 1976. EI regular-benefit recipients from table <a href="https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=1410001101">14-10-0011-01</a>, vector v64549350, since 1997. Fetched keyless from the Web Data Service; every vector's live title is verified against the published table before its numbers are trusted, because a guessed vector produces a plausible wrong number.</li>
+      </ul>
+
+      <h3>The historical extensions</h3>
+      <ul>
+        <li><strong>US 1929-1947</strong>: annual averages from the Census Bureau's <a href="https://www2.census.gov/library/publications/1975/compendia/hist_stats_colonial-1970/hist_stats_colonial-1970p1-chD.pdf">Historical Statistics of the United States</a>, Series D85-86, transcribed from the printed table (p.135). Persons 14 and over; 1929-1939 are Lebergott's reconstructions, the CPS household survey begins in March 1940. Drawn dashed and labelled estimate.</li>
+        <li><strong>The dispute is content:</strong> Series D85-86 counts federal relief workers (WPA and kin) as unemployed. Counting them as employed, <a href="https://www.journals.uchicago.edu/doi/10.1086/260407">Darby (1976)</a> puts 1933 at <span data-tok="darby_1933">20.6%</span> against the <span data-tok="us_peak">…</span> shown, and 1941 at 6.6% against 9.9%. The gap is definitional, not arithmetic: whether a relief job was a job. Both readings are honest; this page draws the Census series and says so.</li>
+        <li><strong>Canada 1921-1945</strong>: June-of-each-year estimates derived from <a href="https://www150.statcan.gc.ca/n1/pub/11-516-x/sectiond/4057750-eng.htm">Historical Statistics of Canada</a>, Series D124-133: persons without jobs and seeking work over the civilian labour force. Census benchmarks (1921, 1931, 1941) extrapolated with trade-union and employer reports by the Dominion Bureau of Statistics; 14 and over; excludes Newfoundland, which joined Confederation in 1949. June readings, not annual averages, and drawn as point-to-point estimates.</li>
+        <li><strong>Canada 1946-1975</strong>: Labour Force Survey annual averages from the same volume, Series D223-235, on the original 14-and-over basis (quarterly survey to 1952, monthly after). The post-1976 revised basis reads one to three tenths lower where they overlap. The monthly line starts in 1976 on the current basis; the seam is visible and labelled, not smoothed over.</li>
+      </ul>
+
+      <h3>Recession shading</h3>
+      <ul>
+        <li><strong>US bands</strong> derive mechanically from NBER dates via <a href="https://fred.stlouisfed.org/series/USREC">FRED USREC</a>: peak month through trough month, <span data-tok="usrec_count">…</span> recessions since 1854 in the shared dataset, drawn here from 1921 on.</li>
+        <li><strong>Canadian bands</strong> are the <a href="https://www.cdhowe.org/wp-content/uploads/2024/12/Commentary_366_0-2.pdf">C.D. Howe Institute Business Cycle Council</a> chronology (Commentary 366, Table 1), thirteen recessions from April 1929, COVID-19 dated by the Council's <a href="https://cdhowe.org/council-reports/cd-howe-institute-business-cycle-council-declares-end-Covid-19-recession">2021 declaration</a>. No API exists; the dates are curated with citations and change roughly once per cycle.</li>
+      </ul>
+
+      <h3>Reading the two countries against each other</h3>
+      <ul>
+        <li>The headline rates are close cousins, not twins: the US counts 16 and over, Canada 15 and over, and survey definitions differ at the edges (Canada counts passive job search, the US does not). Statistics Canada publishes a US-concept adjustment that runs roughly a point below the headline Canadian rate. The gap on this page is real but its width is partly definitional.</li>
+        <li>US payrolls count jobs at establishments; Canadian employment counts employed people at households. A person with two jobs is two payrolls but one employed person.</li>
+        <li>Every series here is seasonally adjusted by its publisher.</li>
+      </ul>
+
+      <h3>Plumbing</h3>
+      <ul>
+        <li>Data refreshes daily via cron; monthly surveys move once a month and weekly claims once a week, so most runs verify rather than change. The header stamp says when data last moved.</li>
+        <li>Series follow the shared <code>econ-core</code> contract (id, provenance, units, frequency, confidence, observations, splices), the same shape as the rest of the collection at <a href="https://debt.chrislawrence.ca">debt</a> and <a href="https://diesel.chrislawrence.ca">diesel</a>, so the eventual overlay can put a claims spike against a credit spread without refactoring.</li>
+        <li>The schema reserves a vintages field for as-published (ALFRED) views: what a reader saw in October 2008, not what the revised history now says. Designed in now, populated later.</li>
+        <li>Raw data: <a href="/api/data">/api/data</a>, or the files under <a href="/data/series.json">/data/</a>.</li>
+      </ul>
+    </div>
+  </section>
+</div>
+
+<footer class="chrislawrence-footer">
+  <a href="https://chrislawrence.ca" class="footer-home-link" aria-label="Back to chrislawrence.ca">
+    <img src="/shared-footer/logo-portrait.png" alt="Chris Lawrence" class="footer-logo"
+         width="32" height="32" loading="lazy" onerror="this.remove()">
+    <span class="footer-home-link-text">Back to chrislawrence.ca</span>
+  </a>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  var YEAR = 365.25 * 86400000;
+  var state = { p: null, range: "max", bands: { us: true, ca: true }, claimsLog: false };
+
+  function css(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+  function rgba(hex, a) {
+    var n = parseInt(hex.replace("#", ""), 16);
+    return "rgba(" + (n >> 16 & 255) + "," + (n >> 8 & 255) + "," + (n & 255) + "," + a + ")";
+  }
+  function ms(iso) { return Date.parse(iso + "T00:00:00Z"); }
+  function pts(entry) { return entry.obs.map(function (o) { return [ms(o[0]), o[1]]; }); }
+
+  function fmtPct(v) { return v === null ? "—" : v.toFixed(1) + "%"; }
+  function fmtPct2(v) { return v === null ? "—" : (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(2); }
+  function fmtCount(v) {
+    if (v === null || !isFinite(v)) return "—";
+    if (v >= 1e6) return (v / 1e6).toFixed(v >= 1e7 ? 1 : 2) + "M";
+    if (v >= 1e3) return Math.round(v / 1e3).toLocaleString() + "k";
+    return String(Math.round(v));
+  }
+
+  function niceTicks(lo, hi, target) {
+    var span = hi - lo; if (span <= 0) span = 1;
+    var raw = span / target;
+    var mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    var norm = raw / mag;
+    var step = (norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 2.5 ? 2.5 : norm <= 5 ? 5 : 10) * mag;
+    var ticks = [];
+    for (var k = Math.ceil(lo / step); k * step <= hi + step * 0.001; k++) {
+      ticks.push(Math.round(k * step * 1e6) / 1e6);
+    }
+    return ticks;
+  }
+  function logTicks(lo, hi) {
+    var out = [], d = Math.pow(10, Math.floor(Math.log10(lo)));
+    for (; d <= hi; d *= 10) [1, 2, 5].forEach(function (m) {
+      var v = m * d; if (v >= lo && v <= hi) out.push(v);
+    });
+    return out;
+  }
+
+  // ------------------------------------------------------------------
+  // Time-scaled canvas chart: mixed frequencies, recession bands,
+  // dashed segments for estimates, crosshair tooltip.
+  // ------------------------------------------------------------------
+  function TimeChart(canvasId, tooltipId, opts) {
+    this.canvas = document.getElementById(canvasId);
+    this.tip = document.getElementById(tooltipId);
+    this.opts = opts || {};
+    this.hover = null;
+    this.h = parseInt(this.canvas.getAttribute("height"), 10) || 300;
+    var self = this;
+    this.canvas.addEventListener("mousemove", function (e) { self.onMove(e.clientX); });
+    this.canvas.addEventListener("mouseleave", function () { self.clearHover(); });
+    this.canvas.addEventListener("touchmove", function (e) { if (e.touches[0]) self.onMove(e.touches[0].clientX); }, { passive: true });
+    this.canvas.addEventListener("touchend", function () { self.clearHover(); });
+    this.canvas.addEventListener("touchcancel", function () { self.clearHover(); });
+  }
+
+  TimeChart.prototype.clearHover = function () { this.hover = null; this.tip.style.opacity = 0; this.draw(); };
+
+  // series: {name, color(varName), points [[ms,v]...], dash, markers, fmt}
+  TimeChart.prototype.setData = function (series, bands) {
+    this.series = series.filter(function (s) { return s.points.length; });
+    this.bands = bands || [];
+    var union = [];
+    this.series.forEach(function (s) {
+      s.medGap = medianGap(s.points);
+      s.points.forEach(function (pt) { union.push(pt[0]); });
+    });
+    union.sort(function (a, b) { return a - b; });
+    this.union = union.filter(function (v, i) { return i === 0 || v !== union[i - 1]; });
+    this.hover = null;
+    this.draw();
+  };
+
+  function medianGap(points) {
+    if (points.length < 2) return YEAR;
+    var gaps = [];
+    for (var i = 1; i < points.length; i++) gaps.push(points[i][0] - points[i - 1][0]);
+    gaps.sort(function (a, b) { return a - b; });
+    return gaps[Math.floor(gaps.length / 2)];
+  }
+
+  function nearest(points, t) {
+    var lo = 0, hi = points.length - 1;
+    while (lo < hi) { var mid = (lo + hi) >> 1; if (points[mid][0] < t) lo = mid + 1; else hi = mid; }
+    if (lo > 0 && Math.abs(points[lo - 1][0] - t) < Math.abs(points[lo][0] - t)) lo -= 1;
+    return lo;
+  }
+
+  TimeChart.prototype.onMove = function (clientX) {
+    if (!this.geom || !this.union || !this.union.length) return;
+    var rect = this.canvas.getBoundingClientRect();
+    var g = this.geom;
+    var t = this.x0 + (clientX - rect.left - g.left) / (g.right - g.left) * (this.x1 - this.x0);
+    var k = nearest(this.union.map(function (v) { return [v, 0]; }), t);
+    var snapped = this.union[Math.max(0, Math.min(this.union.length - 1, k))];
+    if (snapped === this.hover) return;
+    this.hover = snapped;
+    this.draw();
+    this.showTip(snapped, rect);
+  };
+
+  TimeChart.prototype.showTip = function (t, rect) {
+    var monthly = true;
+    this.series.forEach(function (s) { if (s.medGap < 20 * 86400000) monthly = false; });
+    var html = '<div class="tdate">' + new Date(t).toISOString().slice(0, monthly ? 7 : 10) + "</div>";
+    var shown = 0;
+    this.series.forEach(function (s) {
+      var i = nearest(s.points, t);
+      var pt = s.points[i];
+      if (Math.abs(pt[0] - t) > s.medGap * 0.75) return;
+      html += '<div class="trow"><span class="swatch" style="background:' + css(s.color) + '"></span>' +
+              s.name + '<span class="tval">' + (s.fmt || fmtPct)(pt[1]) + "</span></div>";
+      shown++;
+    });
+    if (!shown) { this.tip.style.opacity = 0; return; }
+    this.tip.innerHTML = html;
+    this.tip.style.opacity = 1;
+    var g = this.geom;
+    var px = g.left + (t - this.x0) / (this.x1 - this.x0) * (g.right - g.left);
+    var w = this.tip.offsetWidth;
+    var left = px + 14;
+    if (left + w > rect.width - 4) left = px - w - 14;
+    if (left < 4) left = 4;
+    this.tip.style.left = left + "px";
+    this.tip.style.top = "14px";
+  };
+
+  TimeChart.prototype.draw = function () {
+    var cv = this.canvas, ctx = cv.getContext("2d");
+    var dpr = window.devicePixelRatio || 1;
+    var w = cv.clientWidth, h = this.h;
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    cv.style.height = h + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    if (!this.series || !this.series.length) return;
+
+    var pad = { l: 46, r: 12, t: 10, b: 26 };
+    var g = { left: pad.l, right: w - pad.r, top: pad.t, bottom: h - pad.b };
+    this.geom = g;
+
+    var x0 = Infinity, x1 = -Infinity, lo = Infinity, hi = -Infinity;
+    this.series.forEach(function (s) {
+      s.points.forEach(function (pt) {
+        if (pt[0] < x0) x0 = pt[0];
+        if (pt[0] > x1) x1 = pt[0];
+        if (pt[1] !== null && isFinite(pt[1])) { if (pt[1] < lo) lo = pt[1]; if (pt[1] > hi) hi = pt[1]; }
+      });
+    });
+    if (!isFinite(lo)) return;
+    var log = this.opts.log && lo > 0;
+    if (!log) {
+      var padY = (hi - lo) * 0.08 || 1;
+      lo -= padY; hi += padY;
+      if (this.opts.includeZero && lo > 0) lo = 0;
+      if (this.opts.floor !== undefined && lo < this.opts.floor) lo = this.opts.floor;
+    } else { lo = lo * 0.85; hi = hi * 1.15; }
+    this.x0 = x0; this.x1 = x1;
+
+    var muted = css("--muted"), grid = css("--grid"), axis = css("--axis");
+    var X = function (t) { return g.left + (t - x0) / Math.max(1, x1 - x0) * (g.right - g.left); };
+    var Y = log
+      ? function (v) { return g.bottom - (Math.log(v) - Math.log(lo)) / (Math.log(hi) - Math.log(lo)) * (g.bottom - g.top); }
+      : function (v) { return g.bottom - (v - lo) / (hi - lo) * (g.bottom - g.top); };
+
+    // recession bands first, behind everything
+    (this.bands || []).forEach(function (b) {
+      var s = Math.max(x0, b.start), e = Math.min(x1, b.end);
+      if (e <= s) return;
+      ctx.fillStyle = b.fill;
+      ctx.fillRect(X(s), g.top, Math.max(1, X(e) - X(s)), g.bottom - g.top);
+    });
+
+    // y grid
+    ctx.font = "11px system-ui, sans-serif";
+    ctx.textAlign = "right"; ctx.textBaseline = "middle";
+    var yt = log ? logTicks(lo, hi) : niceTicks(lo, hi, 6);
+    var yFmt = this.opts.yFmt || function (v) { return String(Math.round(v * 10) / 10); };
+    yt.forEach(function (v) {
+      var y = Y(v);
+      ctx.strokeStyle = grid; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(g.left, Math.round(y) + 0.5); ctx.lineTo(g.right, Math.round(y) + 0.5); ctx.stroke();
+      ctx.fillStyle = muted;
+      ctx.fillText(yFmt(v), g.left - 8, y);
+    });
+
+    // zero line where it matters
+    if (!log && lo < 0 && hi > 0) {
+      ctx.strokeStyle = axis; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(g.left, Math.round(Y(0)) + 0.5); ctx.lineTo(g.right, Math.round(Y(0)) + 0.5); ctx.stroke();
+    }
+
+    // threshold rule
+    if (this.opts.threshold !== undefined && this.opts.threshold > lo && this.opts.threshold < hi) {
+      var ty = Y(this.opts.threshold);
+      ctx.strokeStyle = muted; ctx.lineWidth = 1.2; ctx.setLineDash([5, 4]);
+      ctx.beginPath(); ctx.moveTo(g.left, Math.round(ty) + 0.5); ctx.lineTo(g.right, Math.round(ty) + 0.5); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.textAlign = "left"; ctx.textBaseline = "bottom"; ctx.fillStyle = muted;
+      ctx.fillText(this.opts.thresholdLabel || "", g.left + 4, ty - 2);
+      ctx.textAlign = "right"; ctx.textBaseline = "middle";
+    }
+
+    // x ticks: years, thinned by span
+    ctx.textAlign = "center"; ctx.textBaseline = "top";
+    var firstYear = new Date(x0).getUTCFullYear();
+    var lastYear = new Date(x1).getUTCFullYear();
+    var years = lastYear - firstYear;
+    var stepY = years > 60 ? 10 : years > 30 ? 5 : years > 12 ? 2 : 1;
+    for (var yr = Math.ceil(firstYear / stepY) * stepY; yr <= lastYear; yr += stepY) {
+      var t = Date.UTC(yr, 0, 1);
+      if (t < x0 || t > x1) continue;
+      var px = X(t);
+      ctx.strokeStyle = grid; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(Math.round(px) + 0.5, g.top); ctx.lineTo(Math.round(px) + 0.5, g.bottom); ctx.stroke();
+      ctx.fillStyle = muted; ctx.fillText(String(yr), px, g.bottom + 6);
+    }
+
+    // axis baseline
+    ctx.strokeStyle = axis; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(g.left, Math.round(g.bottom) + 0.5); ctx.lineTo(g.right, Math.round(g.bottom) + 0.5); ctx.stroke();
+
+    // series
+    ctx.lineJoin = "round"; ctx.lineCap = "round";
+    var surface = css("--surface-1");
+    this.series.forEach(function (s) {
+      var color = css(s.color);
+      ctx.strokeStyle = color; ctx.lineWidth = 2;
+      ctx.setLineDash(s.dash ? [6, 5] : []);
+      ctx.beginPath();
+      var pen = false;
+      s.points.forEach(function (pt) {
+        if (pt[1] === null || !isFinite(pt[1])) { pen = false; return; }
+        var xx = X(pt[0]), yy = Y(pt[1]);
+        if (!pen) { ctx.moveTo(xx, yy); pen = true; } else { ctx.lineTo(xx, yy); }
+      });
+      ctx.stroke();
+      ctx.setLineDash([]);
+      if (s.markers) {
+        s.points.forEach(function (pt) {
+          if (pt[1] === null) return;
+          ctx.beginPath(); ctx.arc(X(pt[0]), Y(pt[1]), 2.6, 0, Math.PI * 2);
+          ctx.fillStyle = color; ctx.fill();
+          ctx.lineWidth = 1; ctx.strokeStyle = surface; ctx.stroke();
+        });
+      }
+    });
+
+    // crosshair + hover markers
+    if (this.hover !== null) {
+      var hx = X(this.hover);
+      ctx.strokeStyle = axis; ctx.lineWidth = 1;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath(); ctx.moveTo(Math.round(hx) + 0.5, g.top); ctx.lineTo(Math.round(hx) + 0.5, g.bottom); ctx.stroke();
+      ctx.setLineDash([]);
+      var hoverT = this.hover;
+      this.series.forEach(function (s) {
+        var i = nearest(s.points, hoverT);
+        var pt = s.points[i];
+        if (Math.abs(pt[0] - hoverT) > s.medGap * 0.75 || pt[1] === null) return;
+        ctx.beginPath(); ctx.arc(X(pt[0]), Y(pt[1]), 4.5, 0, Math.PI * 2);
+        ctx.fillStyle = css(s.color); ctx.fill();
+        ctx.lineWidth = 2; ctx.strokeStyle = surface; ctx.stroke();
+      });
+    }
+  };
+
+  // ------------------------------------------------------------------
+  // assembly
+  // ------------------------------------------------------------------
+  var charts = {
+    main: new TimeChart("c-main", "t-main", { includeZero: true, yFmt: function (v) { return (Math.round(v * 100) / 100) + "%"; } }),
+    sahm: new TimeChart("c-sahm", "t-sahm", { threshold: 0.5, thresholdLabel: "0.50 trigger", yFmt: function (v) { return v.toFixed(1); } }),
+    growth: new TimeChart("c-growth", "t-growth", { yFmt: function (v) { return (Math.round(v * 100) / 100) + "%"; } }),
+    claims: new TimeChart("c-claims", "t-claims", { includeZero: true, yFmt: fmtCount }),
+    ei: new TimeChart("c-ei", "t-ei", { includeZero: true, yFmt: fmtCount }),
+    part: new TimeChart("c-part", "t-part", { yFmt: function (v) { return (Math.round(v * 100) / 100) + "%"; } }),
+    open: new TimeChart("c-open", "t-open", { includeZero: true, yFmt: function (v) { return (v / 1000).toFixed(v >= 10000 ? 0 : 1) + "M"; } }),
+    quits: new TimeChart("c-quits", "t-quits", { includeZero: true, yFmt: function (v) { return v.toFixed(1) + "%"; } })
+  };
+
+  function bandList(which, fromMs, respectToggle) {
+    var p = state.p, out = [];
+    if (!p || !p.recessions) return out;
+    var defs = [
+      { key: "us", set: p.recessions.us, varName: "--series-1" },
+      { key: "ca", set: p.recessions.ca, varName: "--series-2" }
+    ];
+    var alpha = parseFloat(css("--band-alpha")) || 0.09;
+    defs.forEach(function (d) {
+      if (which.indexOf(d.key) === -1) return;
+      if (respectToggle && !state.bands[d.key]) return;
+      d.set.bands.forEach(function (b) {
+        var start = ms(b.peak + "-01");
+        var trough = b.trough.split("-");
+        var end = Date.UTC(+trough[0], +trough[1], 1) - 86400000;
+        if (end < fromMs) return;
+        out.push({ start: start, end: end, fill: rgba(css(d.varName), alpha) });
+      });
+    });
+    return out;
+  }
+
+  function legend(elId, items) {
+    document.getElementById(elId).innerHTML = items.map(function (it) {
+      var cls = "swatch" + (it.dash ? " dashed" : "") + (it.band ? " band" : "");
+      var style = it.band
+        ? "background:" + rgba(css(it.color), parseFloat(css("--band-alpha")) * 2)
+        : (it.dash ? "border-top-color:" + css(it.color) : "background:" + css(it.color));
+      return '<span class="item"><span class="' + cls + '" style="' + style + '"></span>' + it.name + "</span>";
+    }).join("");
+  }
+
+  function S(id) {
+    var p = state.p;
+    return (p.series && p.series[id]) || null;
+  }
+  function H(id) {
+    var h = state.p.historical;
+    if (!h) return null;
+    for (var i = 0; i < h.series.length; i++) if (h.series[i].id === id) return h.series[i];
+    return null;
+  }
+
+  function cutoffMs() {
+    if (state.range === "max") return -Infinity;
+    var newest = -Infinity;
+    ["us_unemployment_rate", "ca_unemployment_rate"].forEach(function (id) {
+      var e = S(id);
+      if (e) newest = Math.max(newest, ms(e.as_of));
+    });
+    return newest - parseInt(state.range, 10) * YEAR;
+  }
+
+  function clip(points, from) {
+    return from === -Infinity ? points : points.filter(function (pt) { return pt[0] >= from; });
+  }
+
+  function renderMain() {
+    var from = cutoffMs();
+    var series = [];
+    var usPre = H("us_unemployment_rate_annual_prewar");
+    var caJune = H("ca_unemployment_rate_june_interwar");
+    var caLfs = H("ca_unemployment_rate_annual_lfs");
+    var us = S("us_unemployment_rate"), ca = S("ca_unemployment_rate");
+    if (usPre) series.push({ name: "US annual, estimate", color: "--series-1", dash: true, markers: true, points: clip(pts(usPre), from), fmt: fmtPct });
+    if (us) series.push({ name: "US monthly", color: "--series-1", points: clip(pts(us), from), fmt: fmtPct });
+    if (caJune) series.push({ name: "Canada June, estimate", color: "--series-2", dash: true, markers: true, points: clip(pts(caJune), from), fmt: fmtPct });
+    if (caLfs) series.push({ name: "Canada annual, 14+", color: "--series-2", markers: true, points: clip(pts(caLfs), from), fmt: fmtPct });
+    if (ca) series.push({ name: "Canada monthly", color: "--series-2", points: clip(pts(ca), from), fmt: fmtPct });
+    charts.main.setData(series, bandList(["us", "ca"], from, true));
+    var items = [
+      { name: "United States", color: "--series-1" },
+      { name: "Canada", color: "--series-2" },
+      { name: "annual estimates (dashed)", color: "--series-1", dash: true }
+    ];
+    if (state.bands.us) items.push({ name: "US recessions (NBER)", color: "--series-1", band: true });
+    if (state.bands.ca) items.push({ name: "Canadian recessions (C.D. Howe)", color: "--series-2", band: true });
+    legend("legend-main", items);
+  }
+
+  function renderRest() {
+    var p = state.p;
+    var sahmUS = S("us_sahm_rule"), sahmCA = S("ca_sahm_style");
+    charts.sahm.setData([
+      sahmUS && { name: "US, real-time", color: "--series-1", points: pts(sahmUS), fmt: fmtPct2 },
+      sahmCA && { name: "Canada analogue", color: "--series-2", dash: true, points: pts(sahmCA), fmt: fmtPct2 }
+    ].filter(Boolean), bandList(["us", "ca"], -Infinity));
+    legend("legend-sahm", [
+      { name: "US, real-time series", color: "--series-1" },
+      { name: "Canada, computed analogue (dashed)", color: "--series-2", dash: true }
+    ]);
+
+    var pay = S("us_payrolls_yoy"), caEmp = S("ca_employment_yoy");
+    charts.growth.setData([
+      pay && { name: "US payrolls YoY", color: "--series-1", points: pts(pay), fmt: function (v) { return fmtPct2(v) + "%"; } },
+      caEmp && { name: "Canada employment YoY", color: "--series-2", points: pts(caEmp), fmt: function (v) { return fmtPct2(v) + "%"; } }
+    ].filter(Boolean), bandList(["us", "ca"], -Infinity));
+    legend("legend-growth", [
+      { name: "US payrolls (jobs)", color: "--series-1" },
+      { name: "Canada employment (people)", color: "--series-2" }
+    ]);
+
+    renderClaims();
+
+    var ei = S("ca_ei_beneficiaries");
+    if (ei) charts.ei.setData([{ name: "EI beneficiaries", color: "--series-2", points: pts(ei), fmt: fmtCount }], bandList(["ca"], ms(ei.obs[0][0])));
+
+    var usPart = S("us_participation_rate"), caPart = S("ca_participation_rate");
+    charts.part.setData([
+      usPart && { name: "US participation", color: "--series-1", points: pts(usPart), fmt: fmtPct },
+      caPart && { name: "Canada participation", color: "--series-2", points: pts(caPart), fmt: fmtPct }
+    ].filter(Boolean), bandList(["us", "ca"], -Infinity));
+    legend("legend-part", [
+      { name: "United States, 16+", color: "--series-1" },
+      { name: "Canada, 15+", color: "--series-2" }
+    ]);
+
+    var open = S("us_job_openings"), quits = S("us_quits_rate");
+    if (open) charts.open.setData([{ name: "Openings", color: "--series-1", points: pts(open), fmt: function (v) { return (v / 1000).toFixed(2) + "M"; } }], bandList(["us"], ms(open.obs[0][0])));
+    if (quits) charts.quits.setData([{ name: "Quits rate", color: "--series-4", points: pts(quits), fmt: function (v) { return v.toFixed(1) + "%"; } }], bandList(["us"], ms(quits.obs[0][0])));
+  }
+
+  function renderClaims() {
+    var icsa = S("us_initial_claims"), ccsa = S("us_continued_claims");
+    charts.claims.opts.log = state.claimsLog;
+    charts.claims.setData([
+      icsa && { name: "Initial claims", color: "--series-1", points: pts(icsa), fmt: fmtCount },
+      ccsa && { name: "Continued claims", color: "--series-4", points: pts(ccsa), fmt: fmtCount }
+    ].filter(Boolean), bandList(["us"], icsa ? ms(icsa.obs[0][0]) : -Infinity));
+    legend("legend-claims", [
+      { name: "Initial claims, weekly", color: "--series-1" },
+      { name: "Continued claims, weekly", color: "--series-4" }
+    ]);
+  }
+
+  function renderAll() { renderMain(); renderRest(); }
+
+  // ------------------------------------------------------------------
+  // tokens: prose numbers render from data, never from markup
+  // ------------------------------------------------------------------
+  function fillTokens(map) {
+    document.querySelectorAll("[data-tok]").forEach(function (el) {
+      var key = el.getAttribute("data-tok");
+      if (map[key] === undefined) { el.classList.add("tok-missing"); el.textContent = "⟨" + key + "⟩"; }
+      else el.textContent = map[key];
+    });
+  }
+
+  function maxObs(entry) {
+    var best = null;
+    entry.obs.forEach(function (o) { if (best === null || o[1] > best[1]) best = o; });
+    return best;
+  }
+
+  function buildTokens(p) {
+    var map = {};
+    var usPre = H("us_unemployment_rate_annual_prewar");
+    var caJune = H("ca_unemployment_rate_june_interwar");
+    if (usPre) { var up = maxObs(usPre); map.us_peak = up[1].toFixed(1) + "%"; map.us_peak_year = up[0].slice(0, 4); }
+    if (caJune) { var cp = maxObs(caJune); map.ca_peak = cp[1].toFixed(1) + "%"; map.ca_peak_year = cp[0].slice(0, 4); }
+    if (p.meta && p.meta.sahm_threshold) map.sahm_threshold = p.meta.sahm_threshold.value.toFixed(2);
+    map.darby_1933 = "20.6%";
+    var sahmUS = S("us_sahm_rule"), sahmCA = S("ca_sahm_style");
+    if (sahmUS) map.sahm_us_latest = fmtPct2(sahmUS.obs[sahmUS.obs.length - 1][1]);
+    if (sahmCA) map.sahm_ca_latest = fmtPct2(sahmCA.obs[sahmCA.obs.length - 1][1]);
+    var icsa = S("us_initial_claims");
+    if (icsa) {
+      var peak = maxObs(icsa);
+      map.icsa_peak = fmtCount(peak[1]);
+      var pre = { obs: icsa.obs.filter(function (o) { return o[0] < "2020-01-01"; }) };
+      map.icsa_prev_peak = fmtCount(maxObs(pre)[1]);
+    }
+    if (p.recessions && p.recessions.us) map.usrec_count = String(p.recessions.us.bands.length);
+    return map;
+  }
+
+  function buildTiles(p) {
+    var t = [];
+    function last(id) { var e = S(id); return e ? e.obs[e.obs.length - 1] : null; }
+    function month(iso) { return iso.slice(0, 7); }
+    var us = last("us_unemployment_rate"), ca = last("ca_unemployment_rate");
+    var sahm = last("us_sahm_rule"), pay = last("us_payrolls_yoy");
+    if (us) t.push({ label: "US unemployment", color: "var(--series-1)", value: us[1].toFixed(1) + "%", note: month(us[0]) + " · BLS" });
+    if (ca) t.push({ label: "Canada unemployment", color: "var(--series-2)", value: ca[1].toFixed(1) + "%", note: month(ca[0]) + " · StatCan LFS" });
+    if (sahm) t.push({ label: "Sahm rule (US)", color: "var(--series-1)", value: fmtPct2(sahm[1]), note: (sahm[1] >= 0.5 ? "at or past the 0.50 trigger" : "below the 0.50 trigger") + " · " + month(sahm[0]) });
+    if (pay) t.push({ label: "US payroll growth", color: "var(--series-1)", value: fmtPct2(pay[1]) + "%", note: "year over year · " + month(pay[0]) });
+    document.getElementById("tiles").innerHTML = t.map(function (x) {
+      return '<div class="tile"><div class="label"><span class="swatch" style="background:' + x.color + '"></span>' + x.label +
+             '</div><div class="value">' + x.value + '</div><div class="note">' + x.note + "</div></div>";
+    }).join("");
+  }
+
+  function buildTable(p) {
+    var rows = {};
+    function put(year, key, text) { (rows[year] = rows[year] || {})[key] = text; }
+    var us = S("us_unemployment_rate"), ca = S("ca_unemployment_rate");
+    function annualise(entry, key) {
+      if (!entry) return;
+      var acc = {};
+      entry.obs.forEach(function (o) {
+        var y = o[0].slice(0, 4);
+        (acc[y] = acc[y] || []).push(o[1]);
+      });
+      Object.keys(acc).forEach(function (y) {
+        var vals = acc[y];
+        // a partial current year is an average of what exists, marked as such
+        var mean = vals.reduce(function (a, b) { return a + b; }, 0) / vals.length;
+        put(y, key, mean.toFixed(1) + (vals.length < 12 ? "<sup>p</sup>" : ""));
+      });
+    }
+    annualise(us, "us"); annualise(ca, "ca");
+    var usPre = H("us_unemployment_rate_annual_prewar");
+    if (usPre) usPre.obs.forEach(function (o) { put(o[0].slice(0, 4), "us", o[1].toFixed(1) + "<sup>e</sup>"); });
+    var caJune = H("ca_unemployment_rate_june_interwar");
+    if (caJune) caJune.obs.forEach(function (o) { put(o[0].slice(0, 4), "ca", o[1].toFixed(1) + "<sup>e J</sup>"); });
+    var caLfs = H("ca_unemployment_rate_annual_lfs");
+    if (caLfs) caLfs.obs.forEach(function (o) { put(o[0].slice(0, 4), "ca", o[1].toFixed(1) + "<sup>14+</sup>"); });
+    var years = Object.keys(rows).sort().reverse();
+    document.querySelector("#tbl tbody").innerHTML = years.map(function (y) {
+      var r = rows[y];
+      return "<tr><td>" + y + "</td><td>" + (r.us || "—") + "</td><td>" + (r.ca || "—") + "</td></tr>";
+    }).join("");
+  }
+
+  function buildRevisions(log) {
+    var cap = document.getElementById("rev-cap");
+    var wrap = document.getElementById("rev-wrap");
+    if (!log || !log.total) {
+      cap.textContent = "No revisions to already-published observations logged yet. Each refresh is diffed against the one before it; entries appear here the first time an upstream restates a number this page had already shown.";
+      return;
+    }
+    cap.textContent = log.total.toLocaleString() + " revision event" + (log.total === 1 ? "" : "s") +
+      " logged" + (log.recent.length < log.total ? " · showing the " + log.recent.length + " most recent" : "") + ".";
+    wrap.style.display = "";
+    document.querySelector("#rev-tbl tbody").innerHTML = log.recent.map(function (r) {
+      return "<tr><td>" + (r.observed_at || "").slice(0, 10) + "</td><td>" + (r.series || "") +
+             "</td><td>" + (r.changed || "") + "</td><td>" + ((r.span || []).join(" to ")) +
+             "</td><td>" + (r.max_delta === undefined ? "—" : r.max_delta) + "</td></tr>";
+    }).join("");
+  }
+
+  // ------------------------------------------------------------------
+  // wiring
+  // ------------------------------------------------------------------
+  document.querySelectorAll("[data-range]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      document.querySelectorAll("[data-range]").forEach(function (o) { o.setAttribute("aria-pressed", "false"); });
+      b.setAttribute("aria-pressed", "true");
+      state.range = b.getAttribute("data-range");
+      renderMain();
+    });
+  });
+  document.querySelectorAll("[data-band]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var k = b.getAttribute("data-band");
+      state.bands[k] = !state.bands[k];
+      b.setAttribute("aria-pressed", state.bands[k] ? "true" : "false");
+      renderMain();
+    });
+  });
+  document.querySelectorAll("[data-scale]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      document.querySelectorAll("[data-scale]").forEach(function (o) { o.setAttribute("aria-pressed", "false"); });
+      b.setAttribute("aria-pressed", "true");
+      state.claimsLog = b.getAttribute("data-scale") === "log";
+      renderClaims();
+    });
+  });
+
+  var resizeTimer;
+  window.addEventListener("resize", function () {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function () { Object.keys(charts).forEach(function (k) { charts[k].draw(); }); }, 120);
+  });
+  if (window.matchMedia) {
+    var mq = window.matchMedia("(prefers-color-scheme: dark)");
+    (mq.addEventListener ? mq.addEventListener.bind(mq, "change") : mq.addListener.bind(mq))(renderAll);
+  }
+
+  fetch("/api/data", { cache: "no-cache" })
+    .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+    .then(function (p) {
+      state.p = p;
+      document.getElementById("status").style.display = "none";
+
+      var count = 0, obsTotal = 0, key;
+      for (key in p.series) { count++; obsTotal += p.series[key].obs.length; }
+      var us = S("us_unemployment_rate"), ca = S("ca_unemployment_rate");
+      document.getElementById("stamp").textContent =
+        count + " series · " + obsTotal.toLocaleString() + " observations · US data through " +
+        (us ? us.as_of.slice(0, 7) : "—") + ", Canada through " + (ca ? ca.as_of.slice(0, 7) : "—") +
+        " · refreshed " + (p.series_fetched_at || "").slice(0, 10) + " · built __BUILD_TIME__";
+
+      fillTokens(buildTokens(p));
+      buildTiles(p);
+      buildTable(p);
+      buildRevisions(p.changelog);
+      renderAll();
+    })
+    .catch(function (e) {
+      document.getElementById("status").textContent = "Could not load the data (" + e.message + "). The updater may be briefly unavailable; try a reload in a minute.";
+    });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+ "series_group": "meta",
+ "built": "2026-09-07",
+ "sahm_threshold": {
+  "value": 0.5,
+  "unit": "percentage_points",
+  "as_of": "2019",
+  "confidence": "reported",
+  "source": "Claudia Sahm, proposed in 'Direct stimulus payments to individuals' (2019); real-time indicator published by FRED",
+  "source_url": "https://fred.stlouisfed.org/series/SAHMREALTIME",
+  "note": "Readings at or above this level have marked the start of every US recession since 1970. Defined and validated on US data; the Canadian analogue on this page borrows the arithmetic, not the validation."
+ }
+}

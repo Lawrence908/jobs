@@ -1,0 +1,13 @@
+.env
+compose.override.yaml
+*.log
+__pycache__/
+*.pyc
+
+# NOTE: data/ is deliberately NOT ignored. historical.json is the researched
+# spec, meta.json the page's figure tokens, recessions.json the vendored
+# shared dataset. Machine-owned artefacts are listed individually instead.
+data/*.tmp
+# Rewritten wholesale every run; tracking it would bury every real edit.
+data/series.json
+data/updater-state.json

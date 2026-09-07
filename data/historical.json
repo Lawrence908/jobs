@@ -1,0 +1,362 @@
+{
+ "series_group": "historical_extensions",
+ "update_cadence": "Historical. Changes only if a source correction is found; regenerate with scripts/build-historical.py.",
+ "series": [
+  {
+   "id": "us_unemployment_rate_annual_prewar",
+   "label": "US unemployment rate, annual (1929-1947)",
+   "source": "US Census Bureau, Historical Statistics of the United States, Colonial Times to 1970, Series D85-86, p.135",
+   "source_url": "https://www2.census.gov/library/publications/1975/compendia/hist_stats_colonial-1970/hist_stats_colonial-1970p1-chD.pdf",
+   "units": "percent",
+   "freq": "annual",
+   "confidence": "estimate",
+   "as_of": "1947-01-01",
+   "obs": [
+    [
+     "1929-01-01",
+     3.2
+    ],
+    [
+     "1930-01-01",
+     8.7
+    ],
+    [
+     "1931-01-01",
+     15.9
+    ],
+    [
+     "1932-01-01",
+     23.6
+    ],
+    [
+     "1933-01-01",
+     24.9
+    ],
+    [
+     "1934-01-01",
+     21.7
+    ],
+    [
+     "1935-01-01",
+     20.1
+    ],
+    [
+     "1936-01-01",
+     16.9
+    ],
+    [
+     "1937-01-01",
+     14.3
+    ],
+    [
+     "1938-01-01",
+     19.0
+    ],
+    [
+     "1939-01-01",
+     17.2
+    ],
+    [
+     "1940-01-01",
+     14.6
+    ],
+    [
+     "1941-01-01",
+     9.9
+    ],
+    [
+     "1942-01-01",
+     4.7
+    ],
+    [
+     "1943-01-01",
+     1.9
+    ],
+    [
+     "1944-01-01",
+     1.2
+    ],
+    [
+     "1945-01-01",
+     1.9
+    ],
+    [
+     "1946-01-01",
+     3.9
+    ],
+    [
+     "1947-01-01",
+     3.9
+    ]
+   ],
+   "note": "Annual averages, persons 14 and over (16 and over for 1947). 1929-1939 are Lebergott's reconstructions as published by the Census Bureau; the CPS household survey begins in 1940. Relief workers on federal emergency programmes count as unemployed here; see disputed.",
+   "splices": [
+    {
+     "at": "1940-01-01",
+     "note": "The CPS household survey begins March 1940; earlier years are census-benchmark reconstructions."
+    },
+    {
+     "at": "1947-01-01",
+     "note": "Revised postwar basis, 16 and over."
+    }
+   ],
+   "disputed": {
+    "note": "Whether a WPA relief job was a job. Counting federal emergency relief workers as employed, Darby (1976) puts 1933 at 20.6% against the 24.9% shown, and 1941 at 6.6% against 9.9%. The gap is definitional, not arithmetic, and it is the difference between 'a quarter of the labour force idle' and 'a fifth'.",
+    "source": "Michael Darby, 'Three-and-a-half million U.S. employees have been mislaid', Journal of Political Economy 84(1), 1976",
+    "source_url": "https://www.journals.uchicago.edu/doi/10.1086/260407"
+   }
+  },
+  {
+   "id": "ca_unemployment_rate_june_interwar",
+   "label": "Canada unemployment rate, June (1921-1945)",
+   "source": "Statistics Canada, Historical Statistics of Canada (11-516-X), Series D124-133; rate derived as persons without jobs and seeking work over the civilian labour force",
+   "source_url": "https://www150.statcan.gc.ca/n1/pub/11-516-x/sectiond/4057750-eng.htm",
+   "units": "percent",
+   "freq": "annual",
+   "confidence": "estimate",
+   "as_of": "1945-06-01",
+   "obs": [
+    [
+     "1921-06-01",
+     5.8
+    ],
+    [
+     "1922-06-01",
+     4.4
+    ],
+    [
+     "1923-06-01",
+     3.2
+    ],
+    [
+     "1924-06-01",
+     4.5
+    ],
+    [
+     "1925-06-01",
+     4.4
+    ],
+    [
+     "1926-06-01",
+     3.0
+    ],
+    [
+     "1927-06-01",
+     1.8
+    ],
+    [
+     "1928-06-01",
+     1.7
+    ],
+    [
+     "1929-06-01",
+     2.9
+    ],
+    [
+     "1930-06-01",
+     9.1
+    ],
+    [
+     "1931-06-01",
+     11.6
+    ],
+    [
+     "1932-06-01",
+     17.6
+    ],
+    [
+     "1933-06-01",
+     19.3
+    ],
+    [
+     "1934-06-01",
+     14.5
+    ],
+    [
+     "1935-06-01",
+     14.2
+    ],
+    [
+     "1936-06-01",
+     12.8
+    ],
+    [
+     "1937-06-01",
+     9.1
+    ],
+    [
+     "1938-06-01",
+     11.4
+    ],
+    [
+     "1939-06-01",
+     11.4
+    ],
+    [
+     "1940-06-01",
+     9.2
+    ],
+    [
+     "1941-06-01",
+     4.4
+    ],
+    [
+     "1942-06-01",
+     3.0
+    ],
+    [
+     "1943-06-01",
+     1.7
+    ],
+    [
+     "1944-06-01",
+     1.4
+    ],
+    [
+     "1945-06-01",
+     1.6
+    ]
+   ],
+   "note": "1 June of each year, persons 14 and over, excludes Newfoundland (joined Confederation in 1949). Census benchmarks (1921, 1931, 1941) extrapolated between censuses with trade-union and employer reports; the Dominion Bureau of Statistics' own reconstruction, and the best available measure of the period. June readings run slightly below annual averages."
+  },
+  {
+   "id": "ca_unemployment_rate_annual_lfs",
+   "label": "Canada unemployment rate, annual (1946-1975)",
+   "source": "Statistics Canada, Historical Statistics of Canada (11-516-X), Series D223-235 (total, series D233)",
+   "source_url": "https://www150.statcan.gc.ca/n1/pub/11-516-x/sectiond/4057750-eng.htm",
+   "units": "percent",
+   "freq": "annual",
+   "confidence": "reported",
+   "as_of": "1975-01-01",
+   "obs": [
+    [
+     "1946-01-01",
+     3.4
+    ],
+    [
+     "1947-01-01",
+     2.2
+    ],
+    [
+     "1948-01-01",
+     2.3
+    ],
+    [
+     "1949-01-01",
+     2.8
+    ],
+    [
+     "1950-01-01",
+     3.6
+    ],
+    [
+     "1951-01-01",
+     2.4
+    ],
+    [
+     "1952-01-01",
+     2.9
+    ],
+    [
+     "1953-01-01",
+     3.0
+    ],
+    [
+     "1954-01-01",
+     4.6
+    ],
+    [
+     "1955-01-01",
+     4.4
+    ],
+    [
+     "1956-01-01",
+     3.4
+    ],
+    [
+     "1957-01-01",
+     4.6
+    ],
+    [
+     "1958-01-01",
+     7.0
+    ],
+    [
+     "1959-01-01",
+     6.0
+    ],
+    [
+     "1960-01-01",
+     7.0
+    ],
+    [
+     "1961-01-01",
+     7.1
+    ],
+    [
+     "1962-01-01",
+     5.9
+    ],
+    [
+     "1963-01-01",
+     5.5
+    ],
+    [
+     "1964-01-01",
+     4.7
+    ],
+    [
+     "1965-01-01",
+     3.9
+    ],
+    [
+     "1966-01-01",
+     3.6
+    ],
+    [
+     "1967-01-01",
+     4.1
+    ],
+    [
+     "1968-01-01",
+     4.8
+    ],
+    [
+     "1969-01-01",
+     4.7
+    ],
+    [
+     "1970-01-01",
+     5.9
+    ],
+    [
+     "1971-01-01",
+     6.4
+    ],
+    [
+     "1972-01-01",
+     6.3
+    ],
+    [
+     "1973-01-01",
+     5.6
+    ],
+    [
+     "1974-01-01",
+     5.4
+    ],
+    [
+     "1975-01-01",
+     7.1
+    ]
+   ],
+   "note": "Labour Force Survey annual averages on the original 14-and-over basis (the survey ran quarterly 1946-1952, monthly after). The post-1976 revised 15-and-over basis reads one to three tenths lower where the two overlap; the monthly series on this page begins in 1976 on the current basis.",
+   "splices": [
+    {
+     "at": "1953-01-01",
+     "note": "LFS moves from quarterly to monthly collection; annual averages either side."
+    }
+   ]
+  }
+ ]
+}
