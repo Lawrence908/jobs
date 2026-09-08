@@ -4,7 +4,7 @@ US and Canadian unemployment and jobs history on one timeline.
 Live at [jobs.chrislawrence.ca](https://jobs.chrislawrence.ca).
 
 No framework, no build step, no package manager. Plain HTML, CSS and vanilla JS
-with `fetch`, the same shape as [debt](../debt) and [diesel](../diesel). It has
+with `fetch`, the same shape as [debt](https://github.com/Lawrence908/debt) and [diesel](https://github.com/Lawrence908/diesel). It has
 to still work in three years when nobody has run an install in as long.
 
 ## Layout
@@ -41,7 +41,7 @@ Canada):
 
 ## The contract
 
-Every series follows the shared [econ-core](../econ-core) contract: id,
+Every series follows the shared [econ-core](https://github.com/Lawrence908/econ-core) contract: id,
 provenance, units, frequency, confidence, `[date, value]` observations,
 splice notes, and a vintages field reserved for ALFRED as-published views.
 The one rule inherited from debt: **the page contains no figures.** Prose
