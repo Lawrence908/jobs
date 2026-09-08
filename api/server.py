@@ -242,6 +242,85 @@ def build_derived(series):
 
 
 # --------------------------------------------------------------------------
+# analysis: the status block econ-core's hub reads
+# --------------------------------------------------------------------------
+
+# Sahm (2019), validated on US real-time vintages: the 3-month unemployment
+# average rising half a point above its trailing-year low has marked the
+# start of every US recession since 1970 without firing outside one. The
+# threshold is hers, not ours, which is why it ships as a printed rule.
+SAHM_RULE = {
+    "id": "us_sahm_rule",
+    "threshold": 0.50,
+    "statement": "The Sahm rule fires when the 3-month average unemployment rate sits 0.50 points or more above its lowest 3-month average of the prior twelve months.",
+    "source": "Sahm, Claudia (2019), Direct Stimulus Payments to Individuals",
+    "source_url": "https://fred.stlouisfed.org/series/SAHMREALTIME",
+}
+
+
+def _signed(value, places=2):
+    """The page's sign convention: U+2212 for negatives, never a hyphen.
+
+    The Sahm gap goes negative for most of the cycle, so this is the one
+    figure on this page that needs it.
+    """
+    sign = "+" if value > 0 else ("−" if value < 0 else "")
+    return "%s%.*f" % (sign, places, abs(value))
+
+
+def build_status(series):
+    """What the labour data currently says, in the shape the hub reads.
+
+    Keyed on the US real-time Sahm series rather than the Canadian analogue:
+    Sahm defined and validated the 0.50 trigger on US data only, so applying
+    it to StatCan's revised LFS would be borrowing her authority for an
+    arithmetic she never tested."""
+    status = {}
+    for sid in ("us_unemployment_rate", "ca_unemployment_rate",
+                "us_sahm_rule", "ca_sahm_style", "us_payrolls_yoy"):
+        entry = series.get(sid)
+        if entry and entry.get("obs"):
+            status[sid] = {"latest": list(entry["obs"][-1])}
+
+    sahm = series.get("us_sahm_rule")
+    if not sahm or not sahm.get("obs"):
+        return status
+
+    as_of, value = sahm["obs"][-1]
+    fired = value >= SAHM_RULE["threshold"]
+    status["signal_active"] = fired
+
+    # How long the current side of the trigger has held, so the chip can say
+    # "and counting" rather than implying the reading appeared this month.
+    streak = 0
+    for _, v in reversed(sahm["obs"]):
+        if (v >= SAHM_RULE["threshold"]) == fired:
+            streak += 1
+        else:
+            break
+
+    unrate = status.get("us_unemployment_rate")
+    detail = "Sahm at %s against the 0.50 trigger" % _signed(value)
+    if unrate:
+        detail += ", unemployment %.1f%%" % unrate["latest"][1]
+    if streak > 1:
+        detail += " · %s for %d months" % ("fired" if fired else "clear", streak)
+
+    status["headline"] = {
+        "state": "signal" if fired else "normal",
+        "label": "Sahm rule triggered" if fired else "Sahm rule clear",
+        "detail": detail,
+        "as_of": as_of,
+        "rule": SAHM_RULE["statement"],
+    }
+    return status
+
+
+def build_analysis(series):
+    return {"status": build_status(series), "sahm_rule": SAHM_RULE}
+
+
+# --------------------------------------------------------------------------
 # refresh
 # --------------------------------------------------------------------------
 
@@ -407,6 +486,7 @@ def build_data_payload():
         payload["series"] = doc.get("series", {})
         payload["series_fetched_at"] = doc.get("fetched_at")
         payload["series_errors"] = doc.get("errors", {})
+        payload["analysis"] = build_analysis(payload["series"])
     except Exception as exc:  # noqa: BLE001 - charts degrade, page renders
         payload["series"] = {}
         payload.setdefault("errors", {})["series"] = str(exc)
@@ -434,7 +514,22 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):  # noqa: N802 - BaseHTTPRequestHandler API
         path = urllib.parse.urlparse(self.path).path
         if path == "/api/health":
-            self._send(200, {"status": "ok"})
+            # Probe the dependency, not the process: no data, not healthy.
+            try:
+                doc = _load("series.json")
+                series = doc.get("series", {})
+                st = build_status(series)
+                self._send(200, {
+                    "status": "ok",
+                    "series": len(series),
+                    "latest": (series.get("us_unemployment_rate") or {}).get("as_of"),
+                    "signal_active": st.get("signal_active"),
+                    "headline": st.get("headline"),
+                    "errors": len(doc.get("errors", {})),
+                    "fetched_at": doc.get("fetched_at"),
+                })
+            except Exception as exc:  # noqa: BLE001 - absent data IS the unhealthy case
+                self._send(503, {"status": "no data", "error": str(exc)})
         elif path == "/api/data":
             self._send(200, build_data_payload(),
                        cache="public, max-age=300, must-revalidate")

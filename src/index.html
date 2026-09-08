@@ -78,6 +78,15 @@ body {
 
 header h1 { font-size: 1.9rem; line-height: 1.2; margin: 0 0 6px; letter-spacing: -0.02em; }
 header p.sub { margin: 0; color: var(--text-secondary); max-width: 66ch; }
+.chip {
+  display: inline-flex; align-items: baseline; gap: 8px; margin-top: 16px;
+  padding: 5px 12px; border: 1px solid var(--border); border-radius: 999px;
+  background: var(--surface-1); font-size: 0.82rem; color: var(--text-secondary);
+}
+.chip[hidden] { display: none; }
+.chip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--series-3); flex: none; align-self: center; }
+.chip[data-state="signal"] .dot { background: var(--series-2); }
+.chip b { color: var(--text-primary); font-weight: 650; }
 .stamp { margin-top: 10px; font-size: 0.82rem; color: var(--muted); }
 
 .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin: 24px 0 8px; }
@@ -154,6 +163,7 @@ td sup { color: var(--muted); }
   <header>
     <h1>A Century of Work</h1>
     <p class="sub">Unemployment and jobs in the United States and Canada on one timeline: monthly official series back to 1948 and 1976, annual estimates back to 1929 and 1921, every recession shaded. Every figure carries the date it was true and the place it came from.</p>
+    <p class="chip" id="chip" hidden></p>
     <p class="stamp" id="stamp">Loading data…</p>
   </header>
 
@@ -766,6 +776,17 @@ td sup { color: var(--muted); }
     return map;
   }
 
+  function buildChip(p) {
+    var head = ((p.analysis || {}).status || {}).headline;
+    var chip = document.getElementById("chip");
+    if (!head) return;
+    chip.innerHTML = '<span class="dot"></span><span><b>' + head.label + "</b> · " +
+                     head.detail + "</span>";
+    chip.setAttribute("data-state", head.state);
+    chip.title = head.rule;
+    chip.hidden = false;
+  }
+
   function buildTiles(p) {
     var t = [];
     function last(id) { var e = S(id); return e ? e.obs[e.obs.length - 1] : null; }
@@ -884,6 +905,7 @@ td sup { color: var(--muted); }
         " · refreshed " + (p.series_fetched_at || "").slice(0, 10) + " · built __BUILD_TIME__";
 
       fillTokens(buildTokens(p));
+      buildChip(p);
       buildTiles(p);
       buildTable(p);
       buildRevisions(p.changelog);
